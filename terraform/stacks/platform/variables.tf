@@ -69,3 +69,12 @@ variable "eso_chart_version" {
   type        = string
   default     = "2.14.0"
 }
+
+# ---------------------------------------------------------------------------
+# Argo CD (설계 결정 18. 2026-10-27 Phase 1 편입)
+# ---------------------------------------------------------------------------
+variable "argocd_chart_version" {
+  description = "Helm 차트 argo/argo-cd 버전. 10.11.6 = Argo CD v3.5.6. 값은 argocd-values.yaml."
+  type        = string
+  default     = "10.11.6"
+}

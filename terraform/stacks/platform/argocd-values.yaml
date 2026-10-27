@@ -1,0 +1,56 @@
+# Argo CD Helm 값 (argo/argo-cd 10.11.6). 계정 값 없음(공개 가능).
+# 목표: 최소 구성, 외부 노출 없음(port-forward), 기존 kubectl apply 리소스를 재시작 없이 인수.
+
+global:
+  domain: argocd.local # UI 가 링크를 만들 때 쓰는 이름. 실제 DNS 없음(port-forward 로만 접근)
+
+# --- 쓰지 않는 컴포넌트 끔 ---
+dex:
+  enabled: false # SSO 없음. admin 로컬 계정만
+notifications:
+  enabled: false # Slack 등 알림 없음
+applicationSet:
+  replicas: 0 # ApplicationSet 컨트롤러. 앱 1벌이라 불필요(이 차트 버전엔 enabled 키가 없어 0 replica 로 끈다)
+redis-ha:
+  enabled: false # 단일 redis
+
+# --- 리소스: CPU 요청을 두지 않는다 ---
+# 노드2 의 CPU 여유(약 1180m)에 backend RollingUpdate 의 새 Pod(요청 1000m)가 떠야 한다. Argo CD 에 CPU 요청을 주면
+# 그 여유가 1000m 아래로 내려가 배포가 Pending 으로 멈춘다. 메모리만 요청·상한을 두고 CPU 는 Burstable 로 둔다(유휴 사용량 수십 m).
+controller: # application-controller: Git ↔ 클러스터 diff, sync
+  replicas: 1
+  resources:
+    requests: { memory: 256Mi }
+    limits: { memory: 512Mi }
+server: # API·UI
+  replicas: 1
+  resources:
+    requests: { memory: 64Mi }
+    limits: { memory: 256Mi }
+repoServer: # Git clone + kustomize build
+  replicas: 1
+  resources:
+    requests: { memory: 128Mi }
+    limits: { memory: 512Mi }
+redis:
+  resources:
+    requests: { memory: 32Mi }
+    limits: { memory: 128Mi }
+
+configs:
+  params:
+    # TLS 종단 없이 HTTP 로 서빙. Ingress 가 없고 kubectl port-forward(이미 암호화된 API 서버 터널)로만 접근하므로 안전.
+    server.insecure: true
+  cm:
+    # 리소스 추적을 라벨(app.kubernetes.io/instance) 대신 어노테이션으로. 기존 kubectl apply 리소스를 라벨 변경 없이 인수하고,
+    # Deployment Selector(불변)와 충돌하지 않는다.
+    application.resourceTrackingMethod: annotation
+    # Git 폴링 주기(웹훅 없음). 기본 180s → 120s. 더 줄이면 GitHub API 호출만 늘어난다.
+    timeout.reconciliation: 120s
+    exec.enabled: false # UI 에서 Pod 터미널 열기 끔
+    admin.enabled: true
+
+# CRD 는 차트가 설치하고(Application 등), 릴리스를 지워도 남긴다(keep). CRD 가 사라지면 Application 오브젝트가 함께 사라져 복구가 번거롭다.
+crds:
+  install: true
+  keep: true
