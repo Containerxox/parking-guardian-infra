@@ -15,3 +15,7 @@ eks_public_access_cidrs = ["203.0.113.10/32"]                                   
 node_security_group_id = "sg-zzzzzzzzzzzzzzzzz"   # network: node_security_group_id
 # node_instance_type = "m7i.large"   # 기본값
 # node_desired_size  = 2             # 기본값. 0 으로 내리면 노드 비용만 끈다
+
+# --- iam: data 스택 출력값 ---
+photos_bucket_arn = "arn:aws:s3:::parking-guardian-photos-123456789012"   # data: photos_bucket_arn
+models_bucket_arn = "arn:aws:s3:::parking-guardian-models-123456789012"   # data: models_bucket_arn

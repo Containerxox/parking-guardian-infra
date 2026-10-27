@@ -40,3 +40,9 @@ output "node_role_arn" {
   description = "노드 IAM 역할 ARN. 참고용(Pod 권한은 Pod Identity 역할이 따로)."
   value       = aws_iam_role.eks_node.arn
 }
+
+# --- iam ---
+output "backend_role_arn" {
+  description = "backend Pod Identity 역할 ARN. 참고용(config 리포에는 넣지 않는다. 연결은 이름으로 된다)."
+  value       = aws_iam_role.backend.arn
+}

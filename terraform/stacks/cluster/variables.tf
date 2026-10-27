@@ -120,3 +120,33 @@ variable "log_retention_days" {
   type        = number
   default     = 7
 }
+
+# ---------------------------------------------------------------------------
+# data 스택에서 받는 값 (architecture.md 6.4 표: cluster ← data). backend Pod Identity 정책의 리소스 ARN.
+#   terraform -chdir=../data output -raw photos_bucket_arn
+#   terraform -chdir=../data output -raw models_bucket_arn
+# ---------------------------------------------------------------------------
+variable "photos_bucket_arn" {
+  description = "data 출력 photos_bucket_arn. backend 가 violations/* 에 사진을 Put/Get/Head."
+  type        = string
+}
+
+variable "models_bucket_arn" {
+  description = "data 출력 models_bucket_arn. initContainer 가 v*/ 의 모델을 List/Get."
+  type        = string
+}
+
+# ---------------------------------------------------------------------------
+# backend Pod Identity (architecture.md 4.6, 4.8). config 리포와의 계약: Namespace·ServiceAccount 이름.
+# ---------------------------------------------------------------------------
+variable "app_namespace" {
+  description = "앱 Namespace. config 리포 namespace.yaml 과 같아야 한다."
+  type        = string
+  default     = "parking-guardian"
+}
+
+variable "backend_service_account" {
+  description = "backend Pod 의 ServiceAccount 이름. config 리포 serviceaccount-backend.yaml 과 같아야 한다."
+  type        = string
+  default     = "backend"
+}
