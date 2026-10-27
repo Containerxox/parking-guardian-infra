@@ -1,0 +1,3 @@
+# dns-record 스택 변수 값. 실제 terraform.tfvars 는 도메인이 들어가므로 .gitignore 대상이다.
+domain_name = "example.com"     # data 스택 terraform.tfvars 의 domain_name 과 같은 값
+# app_hostname = "parking"      # 기본값
