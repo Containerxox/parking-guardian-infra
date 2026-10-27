@@ -26,3 +26,9 @@ output "private_db_subnet_ids" {
   description = "Private DB Subnet ID 2개. data 스택(RDS 서브넷 그룹)."
   value       = [for s in aws_subnet.private_db : s.id]
 }
+
+# cluster 스택이 NAT Gateway 를 만든 뒤 이 테이블에 0.0.0.0/0 → NAT 경로(aws_route)를 추가한다.
+output "private_app_route_table_id" {
+  description = "Private App 라우트 테이블 ID. cluster 스택이 NAT 경로를 넣을 대상."
+  value       = aws_route_table.private_app.id
+}
