@@ -32,7 +32,23 @@ resource "aws_iam_openid_connect_provider" "github" {
 }
 
 # < 신뢰 정책 > 이 역할을 "누가" 맡을 수 있나. 리포와 브랜치를 sub 클레임으로 제한한다.
-#   sub 형식: repo:<owner>/<repo>:ref:refs/heads/<branch>
+#   sub 형식 2가지가 있다(2026-10-27 CloudTrail 로 확인):
+#     옛 형식  repo:<owner>/<repo>:ref:refs/heads/<branch>
+#     새 형식  repo:<owner>@<owner id>/<repo>@<repo id>:ref:refs/heads/<branch>   ← 이 리포의 토큰은 이 형식
+#   새 형식은 이름을 바꾸거나 지웠다 다시 만든 리포가 옛 이름으로 역할을 가로채는 것을 막기 위해 GitHub 가 숫자 ID 를 붙인 것.
+#   둘 다 허용한다. "@" 는 GitHub 이름에 쓸 수 없는 문자라 "<owner>@*" 와일드카드가 다른 소유자와 겹칠 일은 없다.
+locals {
+  github_owner = split("/", var.github_repository)[0]
+  github_repo  = split("/", var.github_repository)[1]
+
+  github_subjects = flatten([
+    for b in var.github_branches : [
+      "repo:${var.github_repository}:ref:refs/heads/${b}",
+      "repo:${local.github_owner}@*/${local.github_repo}@*:ref:refs/heads/${b}",
+    ]
+  ])
+}
+
 data "aws_iam_policy_document" "github_actions_trust" {
   statement {
     sid     = "GitHubOIDC"
@@ -53,7 +69,7 @@ data "aws_iam_policy_document" "github_actions_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = [for b in var.github_branches : "repo:${var.github_repository}:ref:refs/heads/${b}"]
+      values   = local.github_subjects
     }
   }
 }
