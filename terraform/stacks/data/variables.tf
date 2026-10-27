@@ -141,3 +141,23 @@ variable "app_hostname" {
   type        = string
   default     = "parking"
 }
+
+# ---------------------------------------------------------------------------
+# cicd: GitHub Actions → ECR 푸시용 OIDC 인증 (설계 범위 밖이었으나 2026-10-27 추가)
+# ---------------------------------------------------------------------------
+variable "github_repository" {
+  description = "이미지를 빌드·푸시하는 앱 리포. owner/repo 형식. 신뢰 정책의 sub 조건에 들어가 다른 리포의 워크플로는 이 역할을 쓸 수 없다."
+  type        = string
+  default     = "Containerxox/Parking-guardian"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$", var.github_repository))
+    error_message = "github_repository 는 owner/repo 형식이어야 한다."
+  }
+}
+
+variable "github_branches" {
+  description = "역할을 쓸 수 있는 브랜치. 이 브랜치에 push 된 워크플로만 ECR 에 올릴 수 있다. PR 이나 다른 브랜치는 거부."
+  type        = list(string)
+  default     = ["develop", "main"]
+}

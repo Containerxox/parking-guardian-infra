@@ -81,3 +81,9 @@ output "acm_certificate_arn" {
   description = "검증 완료된 ACM 인증서 ARN. config 리포 ingress.yaml 의 certificate-arn 어노테이션."
   value       = aws_acm_certificate_validation.app.certificate_arn
 }
+
+# --- cicd ---
+output "github_actions_role_arn" {
+  description = "GitHub Actions 가 맡을 역할 ARN. 앱 리포의 Actions variable AWS_ROLE_ARN 에 넣는다(비밀 아님)."
+  value       = aws_iam_role.github_actions.arn
+}
