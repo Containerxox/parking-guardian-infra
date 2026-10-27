@@ -1,0 +1,8 @@
+# data 스택 변수 값. 실제 파일 terraform.tfvars 는 개인 정보·ID 가 들어가므로 .gitignore 대상이다.
+# 이 파일을 복사해 값을 채운다:  cp terraform.tfvars.example terraform.tfvars
+# 아래 단계(dns, rds)로 진행하면서 변수가 늘어난다.
+
+# --- budget ---
+budget_alert_emails = ["you@example.com"]
+# monthly_budget_usd      = 100         # 기본값. 바꿀 때만 적는다
+# budget_alert_thresholds = [50, 100]   # 기본값
