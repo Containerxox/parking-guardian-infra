@@ -39,3 +39,19 @@ output "s3_endpoint_prefix_list_id" {
   description = "S3 Gateway Endpoint 의 prefix list ID. SG 규칙에서 S3 목적지를 지정할 때."
   value       = aws_vpc_endpoint.s3.prefix_list_id
 }
+
+# SG ID 3개 (architecture.md 6.4 표).
+output "alb_security_group_id" {
+  description = "alb SG. config 리포 Ingress 의 alb.ingress.kubernetes.io/security-groups 어노테이션."
+  value       = aws_security_group.alb.id
+}
+
+output "node_security_group_id" {
+  description = "node SG. cluster 스택 노드 그룹의 추가 SG."
+  value       = aws_security_group.node.id
+}
+
+output "rds_security_group_id" {
+  description = "rds SG. data 스택 RDS 인스턴스."
+  value       = aws_security_group.rds.id
+}

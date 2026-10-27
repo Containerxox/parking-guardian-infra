@@ -61,3 +61,15 @@ variable "private_db_subnet_cidrs" {
     c = "10.0.41.0/24"
   }
 }
+
+# ---------------------------------------------------------------------------
+# Security Group (architecture.md 4.2 "SG 사슬")
+# ---------------------------------------------------------------------------
+variable "app_ports" {
+  description = "ALB 가 Pod 로 보내는 컨테이너 포트. 키는 규칙 이름, 값은 포트. Backend Flask 5000, Frontend nginx(비특권 이미지) 8080."
+  type        = map(number)
+  default = {
+    backend  = 5000
+    frontend = 8080
+  }
+}
