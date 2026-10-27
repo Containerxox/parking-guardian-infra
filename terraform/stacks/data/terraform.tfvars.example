@@ -6,3 +6,8 @@
 budget_alert_emails = ["you@example.com"]
 # monthly_budget_usd      = 100         # 기본값. 바꿀 때만 적는다
 # budget_alert_thresholds = [50, 100]   # 기본값
+
+# --- rds: network 스택 출력값 ---
+# cd ../network 에서  terraform output -json private_db_subnet_ids ,  terraform output -raw rds_security_group_id
+private_db_subnet_ids = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
+rds_security_group_id = "sg-zzzzzzzzzzzzzzzzz"

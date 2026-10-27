@@ -57,3 +57,26 @@ variable "secret_recovery_window_days" {
     error_message = "secret_recovery_window_days 는 0 또는 7~30 이어야 한다."
   }
 }
+
+# ---------------------------------------------------------------------------
+# network 스택에서 받는 값 (architecture.md 6.4 표: data ← network).
+# 기본값이 없다. terraform.tfvars 에 적는다(ID 는 Git 에 올리지 않음). 값은 network 스택의 terraform output 에서:
+#   terraform -chdir=../network output -json private_db_subnet_ids
+#   terraform -chdir=../network output -raw  rds_security_group_id
+# terraform_remote_state 로 직접 읽지 않는 이유: data 스택이 network 의 State 버킷 읽기 권한에 묶이고,
+# 어느 값을 받는지가 코드에 드러나지 않는다. 변수로 받으면 입력이 명시적이고 스택 사이 결합이 느슨하다.
+# ---------------------------------------------------------------------------
+variable "private_db_subnet_ids" {
+  description = "network 출력 private_db_subnet_ids. RDS 서브넷 그룹. AZ 가 다른 Subnet 2개 이상."
+  type        = list(string)
+
+  validation {
+    condition     = length(var.private_db_subnet_ids) >= 2
+    error_message = "RDS 서브넷 그룹은 AZ 가 다른 Subnet 이 2개 이상 필요하다."
+  }
+}
+
+variable "rds_security_group_id" {
+  description = "network 출력 rds_security_group_id. RDS 인스턴스에 붙는 SG(node 에서 5432 만 허용)."
+  type        = string
+}
