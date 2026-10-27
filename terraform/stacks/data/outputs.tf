@@ -38,3 +38,25 @@ output "secret_arns" {
   description = "비밀 ARN. platform 스택 ESO Pod Identity 정책(Get/Describe). RDS 비밀 ARN 은 rds 단계에서 따로 출력."
   value       = { for k, s in aws_secretsmanager_secret.this : k => s.arn }
 }
+
+# --- rds ---
+# config 리포 config.env → ConfigMap: DB_HOST, DB_PORT, DB_NAME. 비밀번호는 아래 ARN 의 비밀에서 ESO 가 가져온다.
+output "db_host" {
+  description = "RDS 엔드포인트 호스트. config.env 의 DB_HOST."
+  value       = aws_db_instance.this.address
+}
+
+output "db_port" {
+  description = "RDS 포트. config.env 의 DB_PORT."
+  value       = aws_db_instance.this.port
+}
+
+output "db_name" {
+  description = "데이터베이스 이름. config.env 의 DB_NAME."
+  value       = aws_db_instance.this.db_name
+}
+
+output "db_master_secret_arn" {
+  description = "RDS 관리형 마스터 비밀의 ARN(키 username, password). platform 스택 ESO 정책, config 리포 externalsecret.yaml."
+  value       = aws_db_instance.this.master_user_secret[0].secret_arn
+}

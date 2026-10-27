@@ -80,3 +80,45 @@ variable "rds_security_group_id" {
   description = "network 출력 rds_security_group_id. RDS 인스턴스에 붙는 SG(node 에서 5432 만 허용)."
   type        = string
 }
+
+# ---------------------------------------------------------------------------
+# RDS 인스턴스 (architecture.md 4.5)
+# ---------------------------------------------------------------------------
+variable "db_instance_class" {
+  description = "인스턴스 클래스. t4g = Graviton(ARM) 버스터블. 부족하면 db.t4g.small."
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "db_allocated_storage_gb" {
+  description = "gp3 저장소 크기(GB). gp3 최소 20."
+  type        = number
+  default     = 20
+}
+
+variable "db_name" {
+  description = "처음 만들 데이터베이스 이름. 앱 config.py 의 DB_NAME 기본값과 같다."
+  type        = string
+  default     = "parking_guardian"
+}
+
+variable "db_master_username" {
+  description = "마스터 사용자 이름. 비밀번호는 RDS 가 만들어 Secrets Manager 에 둔다. 앱 config.py 의 DB_USER 기본값과 같다."
+  type        = string
+  default     = "parking"
+}
+
+variable "db_backup_retention_days" {
+  description = <<-EOT
+    자동 백업 보관 일수. 0 이면 백업 끔. 설계는 7일이었으나 AWS Free 플랜은 상한이 1일이다
+    (CreateDBInstance 가 FreeTierRestrictionError 로 거부, 2026-10-27). 유료 플랜으로 바꾸면 7 로 올린다.
+  EOT
+  type        = number
+  default     = 1
+}
+
+variable "db_deletion_protection" {
+  description = "true 면 콘솔·CLI·Terraform 어디서도 삭제가 거부된다. 지울 때는 먼저 false 로 apply."
+  type        = bool
+  default     = true
+}
