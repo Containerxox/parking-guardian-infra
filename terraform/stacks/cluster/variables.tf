@@ -111,3 +111,12 @@ variable "node_max_size" {
   type        = number
   default     = 3
 }
+
+# ---------------------------------------------------------------------------
+# 관리형 Add-on / CloudWatch (architecture.md 4.10)
+# ---------------------------------------------------------------------------
+variable "log_retention_days" {
+  description = "Container Insights 로그 그룹(application, dataplane, host, performance)의 보관 일수. 설계 7일."
+  type        = number
+  default     = 7
+}
