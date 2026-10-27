@@ -1,0 +1,6 @@
+# cluster 스택 변수 값. 실제 파일 terraform.tfvars 는 ID 가 들어가므로 .gitignore 대상이다.
+# 아래 단계(eks, nodes, iam)로 진행하면서 변수가 늘어난다.
+
+# --- nat: network 스택 출력값 ---
+public_subnet_ids          = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
+private_app_route_table_id = "rtb-zzzzzzzzzzzzzzzzz"
