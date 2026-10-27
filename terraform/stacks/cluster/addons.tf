@@ -118,6 +118,18 @@ resource "aws_eks_addon" "cloudwatch_observability" {
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "PRESERVE"
 
+  # Application Signals(APM 추적) 는 쓰지 않는다. 기본값(enabled, autoMonitor.monitorAllServices = true)으로 두면 웹훅이 모든 Pod 에
+  # 언어별 자동 계측 initContainer 4개(java, python, nodejs, dotnet)를 끼워 넣어 Pod 시작 시간 측정(2.1절)이 흐려지고 비용이 붙는다
+  # (2026-10-27 backend Pod 가 Init:4/5 로 뜨는 것을 보고 확인). 둘 다 끈다. 지표(Container Insights)·로그(Fluent Bit)는 그대로.
+  configuration_values = jsonencode({
+    applicationSignals = { enabled = false }
+    manager = {
+      applicationSignals = {
+        autoMonitor = { monitorAllServices = false }
+      }
+    }
+  })
+
   # Add-on 이 만드는 ServiceAccount amazon-cloudwatch/cloudwatch-agent 에 위 역할을 연결. EKS 가 association 을 함께 만든다.
   pod_identity_association {
     role_arn        = aws_iam_role.cloudwatch_agent.arn
