@@ -10,3 +10,19 @@ output "vpc_cidr" {
   description = "VPC CIDR. SG 규칙이나 뒤 Phase 의 피어링 계획에 참고."
   value       = aws_vpc.this.cidr_block
 }
+
+# Subnet ID. for_each 리소스는 map 이므로 values() 로 리스트를 만든다. 키("a","c") 순으로 정렬된다.
+output "public_subnet_ids" {
+  description = "Public Subnet ID 2개(AZ a, c 순). cluster 스택(NAT Gateway 위치, EKS 클러스터 subnet)."
+  value       = [for s in aws_subnet.public : s.id]
+}
+
+output "private_app_subnet_ids" {
+  description = "Private App Subnet ID 2개. cluster 스택(EKS 노드 그룹)."
+  value       = [for s in aws_subnet.private_app : s.id]
+}
+
+output "private_db_subnet_ids" {
+  description = "Private DB Subnet ID 2개. data 스택(RDS 서브넷 그룹)."
+  value       = [for s in aws_subnet.private_db : s.id]
+}
