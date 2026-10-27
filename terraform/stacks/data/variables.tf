@@ -122,3 +122,22 @@ variable "db_deletion_protection" {
   type        = bool
   default     = true
 }
+
+# ---------------------------------------------------------------------------
+# dns: Route 53 영역 + ACM (architecture.md 4.9)
+# ---------------------------------------------------------------------------
+variable "domain_name" {
+  description = "외부 등록기관에서 산 도메인(예: example.com). Route 53 Hosted Zone 이름. 실제 값은 terraform.tfvars 에만."
+  type        = string
+
+  validation {
+    condition     = can(regex("^([a-z0-9-]+[.])+[a-z]{2,}$", var.domain_name))
+    error_message = "domain_name 은 소문자 도메인(example.com) 형식이어야 한다. 끝에 점이나 https:// 를 붙이지 않는다."
+  }
+}
+
+variable "app_hostname" {
+  description = "서비스 호스트 이름의 앞부분. 인증서와 Alias 레코드는 <app_hostname>.<domain_name> 하나다."
+  type        = string
+  default     = "parking"
+}

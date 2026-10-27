@@ -11,3 +11,7 @@ budget_alert_emails = ["you@example.com"]
 # cd ../network 에서  terraform output -json private_db_subnet_ids ,  terraform output -raw rds_security_group_id
 private_db_subnet_ids = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
 rds_security_group_id = "sg-zzzzzzzzzzzzzzzzz"
+
+# --- dns ---
+domain_name = "example.com"     # 외부 등록기관에서 산 도메인. 영역 apply 뒤 NS 4개를 등록기관에 등록한다
+# app_hostname = "parking"      # 기본값. 서비스 주소는 parking.example.com

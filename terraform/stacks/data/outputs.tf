@@ -60,3 +60,24 @@ output "db_master_secret_arn" {
   description = "RDS 관리형 마스터 비밀의 ARN(키 username, password). platform 스택 ESO 정책, config 리포 externalsecret.yaml."
   value       = aws_db_instance.this.master_user_secret[0].secret_arn
 }
+
+# --- dns ---
+output "route53_zone_id" {
+  description = "Hosted Zone ID. dns-record 스택(Alias 레코드)."
+  value       = aws_route53_zone.this.zone_id
+}
+
+output "route53_name_servers" {
+  description = "영역의 네임서버 4개. 외부 등록기관의 네임서버 설정에 그대로 등록한다."
+  value       = aws_route53_zone.this.name_servers
+}
+
+output "app_fqdn" {
+  description = "서비스 호스트 이름(parking.<도메인>). config 리포 Ingress host, CORS_ORIGINS, dns-record 레코드 이름."
+  value       = "${var.app_hostname}.${var.domain_name}"
+}
+
+output "acm_certificate_arn" {
+  description = "검증 완료된 ACM 인증서 ARN. config 리포 ingress.yaml 의 certificate-arn 어노테이션."
+  value       = aws_acm_certificate_validation.app.certificate_arn
+}
