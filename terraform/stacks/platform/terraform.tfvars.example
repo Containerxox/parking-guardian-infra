@@ -3,3 +3,6 @@
 
 # --- cluster 스택 출력값 ---
 cluster_name = "parking-guardian"          # cluster: cluster_name
+
+# --- alb-controller: network 스택 출력값 ---
+vpc_id = "vpc-xxxxxxxxxxxxxxxxx"            # network: vpc_id
