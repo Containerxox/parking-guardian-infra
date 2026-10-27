@@ -67,3 +67,47 @@ variable "eks_cluster_log_types" {
   type        = list(string)
   default     = []
 }
+
+variable "node_security_group_id" {
+  description = "network 출력 node_security_group_id. 노드에 '추가' 로 붙는 SG(alb 에서 5000·8080 수신, 아웃바운드 전체). 클러스터 SG 는 EKS 가 따로 붙인다."
+  type        = string
+}
+
+# ---------------------------------------------------------------------------
+# 노드 그룹 (architecture.md 4.3)
+# ---------------------------------------------------------------------------
+variable "node_instance_type" {
+  description = <<-EOT
+    노드 인스턴스. 설계 4.3 은 m7i.large(2 vCPU, 8 GiB) 였으나 AWS Free 플랜은 Free Tier 적격 타입만 띄울 수 있다
+    (2026-10-27 Auto Scaling 실패: "The specified instance type is not eligible for Free Tier").
+    서울 리전 적격 x86 타입 중 8 GiB 는 m7i-flex.large 하나다(같은 m7i 세대, 2 vCPU, 8 GiB, 최대 Pod 29개).
+    flex 는 평균 사용률 40% 를 전제한 타입이라 추론이 CPU 를 오래 꽉 채우면 m7i.large 보다 느릴 수 있다. 측정 기록에 이 점을 적는다.
+    유료 플랜으로 바꾸면 m7i.large 로 되돌린다(노드 그룹 재생성).
+  EOT
+  type        = string
+  default     = "m7i-flex.large"
+}
+
+variable "node_disk_gb" {
+  description = "노드 루트 볼륨(gp3) 크기. Backend 이미지 2.9 GB + 캐시 레이어 + 로그. 설계 50 GB."
+  type        = number
+  default     = 50
+}
+
+variable "node_desired_size" {
+  description = "노드 수. 2 = AZ 분산 + Rolling 배포(새 backend 1000m 이 같은 노드엔 못 뜸)."
+  type        = number
+  default     = 2
+}
+
+variable "node_min_size" {
+  description = "최소 노드 수. 0 이면 desired 를 0 으로 내려 노드 비용만 끌 수 있다(클러스터는 유지)."
+  type        = number
+  default     = 0
+}
+
+variable "node_max_size" {
+  description = "최대 노드 수. 측정 때 3대째를 '새 노드(이미지 캐시 없음)' 로 쓴다."
+  type        = number
+  default     = 3
+}

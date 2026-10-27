@@ -29,3 +29,14 @@ output "cluster_version" {
   description = "실제 Kubernetes 버전(플랫폼 버전은 콘솔)."
   value       = aws_eks_cluster.this.version
 }
+
+# --- nodes ---
+output "node_group_name" {
+  description = "관리형 노드 그룹 이름. aws eks update-nodegroup-config --scaling-config 로 노드 수를 바꿀 때."
+  value       = aws_eks_node_group.main.node_group_name
+}
+
+output "node_role_arn" {
+  description = "노드 IAM 역할 ARN. 참고용(Pod 권한은 Pod Identity 역할이 따로)."
+  value       = aws_iam_role.eks_node.arn
+}

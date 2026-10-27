@@ -10,3 +10,8 @@ private_app_subnet_ids  = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy
 eks_public_access_cidrs = ["203.0.113.10/32"]                                        # 관리자 PC 공인 IP (curl https://checkip.amazonaws.com)
 # eks_version           = "1.35"       # 기본값
 # eks_cluster_log_types = []           # 기본값(끔)
+
+# --- nodes ---
+node_security_group_id = "sg-zzzzzzzzzzzzzzzzz"   # network: node_security_group_id
+# node_instance_type = "m7i.large"   # 기본값
+# node_desired_size  = 2             # 기본값. 0 으로 내리면 노드 비용만 끈다
