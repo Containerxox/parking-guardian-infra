@@ -6,3 +6,8 @@ cluster_name = "parking-guardian"          # cluster: cluster_name
 
 # --- alb-controller: network 스택 출력값 ---
 vpc_id = "vpc-xxxxxxxxxxxxxxxxx"            # network: vpc_id
+
+# --- eso: data 스택 출력값 ---
+app_secret_arn  = "arn:aws:secretsmanager:ap-northeast-2:123456789012:secret:parking-guardian/app-xxxxxx"   # data: secret_arns.app
+seed_secret_arn = "arn:aws:secretsmanager:ap-northeast-2:123456789012:secret:parking-guardian/seed-xxxxxx"  # data: secret_arns.seed
+rds_secret_arn  = "arn:aws:secretsmanager:ap-northeast-2:123456789012:secret:rds!db-xxxxxxxx-xxxxxx"        # data: db_master_secret_arn

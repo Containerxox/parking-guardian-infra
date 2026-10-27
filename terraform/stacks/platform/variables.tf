@@ -40,3 +40,32 @@ variable "alb_controller_chart_version" {
   type        = string
   default     = "3.6.2"
 }
+
+# ---------------------------------------------------------------------------
+# data 스택에서 받는 값 (architecture.md 6.4 표: platform ← data). ESO 가 읽을 비밀 3개의 ARN.
+#   terraform -chdir=../data output -json secret_arns      → app, seed
+#   terraform -chdir=../data output -raw  db_master_secret_arn
+# ---------------------------------------------------------------------------
+variable "app_secret_arn" {
+  description = "data 출력 secret_arns.app (parking-guardian/app: SECRET_KEY, JWT_SECRET)."
+  type        = string
+}
+
+variable "seed_secret_arn" {
+  description = "data 출력 secret_arns.seed (parking-guardian/seed: SEED_ADMIN_PASSWORD, SEED_DEVICE_KEY_SECRET)."
+  type        = string
+}
+
+variable "rds_secret_arn" {
+  description = "data 출력 db_master_secret_arn (RDS 관리형: username, password)."
+  type        = string
+}
+
+# ---------------------------------------------------------------------------
+# External Secrets Operator (architecture.md 4.8)
+# ---------------------------------------------------------------------------
+variable "eso_chart_version" {
+  description = "Helm 차트 external-secrets/external-secrets 버전(= 앱 버전). config 리포의 ExternalSecret 은 API external-secrets.io/v1 을 쓴다(ESO 1.x 이상)."
+  type        = string
+  default     = "2.14.0"
+}
