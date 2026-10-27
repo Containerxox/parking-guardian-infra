@@ -4,3 +4,9 @@
 # --- nat: network 스택 출력값 ---
 public_subnet_ids          = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
 private_app_route_table_id = "rtb-zzzzzzzzzzzzzzzzz"
+
+# --- eks ---
+private_app_subnet_ids  = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]   # network: private_app_subnet_ids
+eks_public_access_cidrs = ["203.0.113.10/32"]                                        # 관리자 PC 공인 IP (curl https://checkip.amazonaws.com)
+# eks_version           = "1.35"       # 기본값
+# eks_cluster_log_types = []           # 기본값(끔)
