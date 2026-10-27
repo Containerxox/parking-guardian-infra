@@ -1,0 +1,36 @@
+# Only Terraform code is public. Design notes, variable values and State stay local.
+docs/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+*.tfplan
+
+# Credentials and cluster access
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+kubeconfig*
+.aws/
+
+# Claude Code
+CLAUDE.md
+.claude/
+
+# Shared S3 backend settings (contains the account ID). Only the example is tracked.
+backend.hcl
+!backend.hcl.example
