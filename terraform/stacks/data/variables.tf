@@ -43,3 +43,17 @@ variable "ecr_keep_images" {
   type        = number
   default     = 10
 }
+
+# ---------------------------------------------------------------------------
+# Secrets Manager (architecture.md 4.8)
+# ---------------------------------------------------------------------------
+variable "secret_recovery_window_days" {
+  description = "비밀 삭제 뒤 복구 가능 기간(일). 7~30, 또는 0(즉시 삭제, 복구 불가). 실습 반복을 위해 최소값."
+  type        = number
+  default     = 7
+
+  validation {
+    condition     = var.secret_recovery_window_days == 0 || (var.secret_recovery_window_days >= 7 && var.secret_recovery_window_days <= 30)
+    error_message = "secret_recovery_window_days 는 0 또는 7~30 이어야 한다."
+  }
+}

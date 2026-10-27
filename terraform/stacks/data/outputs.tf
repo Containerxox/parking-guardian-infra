@@ -27,3 +27,14 @@ output "ecr_repository_urls" {
   description = "ECR 리포지토리 URL. 키 backend / frontend. PC 의 docker push 와 config 리포 config.env."
   value       = { for k, r in aws_ecr_repository.this : k => r.repository_url }
 }
+
+# --- secrets ---
+output "secret_names" {
+  description = "Secrets Manager 비밀 이름. 키 app / seed. config 리포 externalsecret.yaml 과 put-secret-value 의 --secret-id."
+  value       = { for k, s in aws_secretsmanager_secret.this : k => s.name }
+}
+
+output "secret_arns" {
+  description = "비밀 ARN. platform 스택 ESO Pod Identity 정책(Get/Describe). RDS 비밀 ARN 은 rds 단계에서 따로 출력."
+  value       = { for k, s in aws_secretsmanager_secret.this : k => s.arn }
+}
