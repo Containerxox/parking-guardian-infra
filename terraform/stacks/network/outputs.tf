@@ -32,3 +32,10 @@ output "private_app_route_table_id" {
   description = "Private App 라우트 테이블 ID. cluster 스택이 NAT 경로를 넣을 대상."
   value       = aws_route_table.private_app.id
 }
+
+# S3 prefix list ID. "S3 의 IP 대역" 을 가리키는 AWS 관리 목록(pl-xxxx).
+# 노드 SG 의 아웃바운드를 좁힐 때 "S3 로 가는 443" 을 CIDR 대신 이 ID 로 적을 수 있다.
+output "s3_endpoint_prefix_list_id" {
+  description = "S3 Gateway Endpoint 의 prefix list ID. SG 규칙에서 S3 목적지를 지정할 때."
+  value       = aws_vpc_endpoint.s3.prefix_list_id
+}
