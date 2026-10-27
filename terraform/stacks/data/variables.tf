@@ -34,3 +34,12 @@ variable "budget_alert_emails" {
     error_message = "budget_alert_emails 에 최소 1개 이메일이 필요하다 (terraform.tfvars 에 적는다)."
   }
 }
+
+# ---------------------------------------------------------------------------
+# ECR (architecture.md 4.7)
+# ---------------------------------------------------------------------------
+variable "ecr_keep_images" {
+  description = "리포지토리마다 유지할 태그 있는 이미지 수. 넘으면 오래된 것부터 Lifecycle 정책이 지운다."
+  type        = number
+  default     = 10
+}

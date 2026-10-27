@@ -20,3 +20,10 @@ output "models_bucket_arn" {
   description = "cluster 스택 backend Pod Identity 정책(v*/ Get/List)."
   value       = aws_s3_bucket.this["models"].arn
 }
+
+# --- storage: ECR ---
+# 형식 <계정ID>.dkr.ecr.<리전>.amazonaws.com/parking-guardian/<이름>. docker tag/push 대상이고 config.env 의 이미지 주소.
+output "ecr_repository_urls" {
+  description = "ECR 리포지토리 URL. 키 backend / frontend. PC 의 docker push 와 config 리포 config.env."
+  value       = { for k, r in aws_ecr_repository.this : k => r.repository_url }
+}
