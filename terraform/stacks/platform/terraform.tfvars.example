@@ -1,0 +1,5 @@
+# platform 스택 변수 값. 실제 terraform.tfvars 는 ID·ARN 이 들어가므로 .gitignore 대상이다.
+# 아래 단계(alb-controller, eso)로 진행하면서 변수가 늘어난다.
+
+# --- cluster 스택 출력값 ---
+cluster_name = "parking-guardian"          # cluster: cluster_name
