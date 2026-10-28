@@ -20,8 +20,10 @@ redis-ha:
 controller: # application-controller: Git ↔ 클러스터 diff, sync
   replicas: 1
   resources:
-    requests: { memory: 256Mi }
-    limits: { memory: 512Mi }
+    # 2026-10-28 kube-prometheus-stack(CRD 수백 KB ×10 + 리소스 수십 개)을 관리하기 시작하자 512Mi 에서 OOMKilled 6회 → 상한 1Gi.
+    # 노드 메모리는 7.1 GiB 라 여유가 있다. CPU 요청은 여전히 두지 않는다.
+    requests: { memory: 512Mi }
+    limits: { memory: 1Gi }
 server: # API·UI
   replicas: 1
   resources:

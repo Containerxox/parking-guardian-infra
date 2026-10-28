@@ -61,6 +61,11 @@ variable "rds_secret_arn" {
   type        = string
 }
 
+variable "grafana_secret_arn" {
+  description = "data 출력 secret_arns.grafana (parking-guardian/grafana: admin-user, admin-password). ESO 가 monitoring/grafana-admin 으로 만든다."
+  type        = string
+}
+
 # ---------------------------------------------------------------------------
 # External Secrets Operator (architecture.md 4.8)
 # ---------------------------------------------------------------------------

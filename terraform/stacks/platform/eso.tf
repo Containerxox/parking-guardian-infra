@@ -7,8 +7,8 @@
 # 셋이 같은 ServiceAccount 를 쓰므로 연결은 하나다.
 # ---------------------------------------------------------------------------
 
-# < IAM 정책 > 비밀 3개의 값 읽기와 메타데이터 조회만. 쓰기·삭제·목록 없음. 다른 비밀은 ARN 이 없으니 못 읽는다.
-# KMS 권한은 필요 없다: 세 비밀 모두 AWS 관리형 키(aws/secretsmanager)라 Secrets Manager 가 대신 복호화한다.
+# < IAM 정책 > 비밀 4개(app, seed, rds, grafana)의 값 읽기와 메타데이터 조회만. 쓰기·삭제·목록 없음. 다른 비밀은 ARN 이 없으니 못 읽는다.
+# KMS 권한은 필요 없다: 네 비밀 모두 AWS 관리형 키(aws/secretsmanager)라 Secrets Manager 가 대신 복호화한다.
 data "aws_iam_policy_document" "eso" {
   statement {
     sid    = "ReadAppSecrets"
@@ -21,13 +21,14 @@ data "aws_iam_policy_document" "eso" {
       var.app_secret_arn,
       var.seed_secret_arn,
       var.rds_secret_arn,
+      var.grafana_secret_arn, # 2026-10-28 모니터링: Grafana 관리자 계정
     ]
   }
 }
 
 resource "aws_iam_role" "eso" {
   name               = "${var.project_name}-eso"
-  description        = "Pod Identity role for External Secrets Operator (external-secrets/external-secrets): read 3 secrets"
+  description        = "Pod Identity role for External Secrets Operator (external-secrets/external-secrets): read 4 secrets"
   assume_role_policy = data.aws_iam_policy_document.pod_identity_trust.json # alb_controller.tf 의 공용 신뢰 정책
 
   tags = {

@@ -11,3 +11,4 @@ vpc_id = "vpc-xxxxxxxxxxxxxxxxx"            # network: vpc_id
 app_secret_arn  = "arn:aws:secretsmanager:ap-northeast-2:123456789012:secret:parking-guardian/app-xxxxxx"   # data: secret_arns.app
 seed_secret_arn = "arn:aws:secretsmanager:ap-northeast-2:123456789012:secret:parking-guardian/seed-xxxxxx"  # data: secret_arns.seed
 rds_secret_arn  = "arn:aws:secretsmanager:ap-northeast-2:123456789012:secret:rds!db-xxxxxxxx-xxxxxx"        # data: db_master_secret_arn
+grafana_secret_arn = "arn:aws:secretsmanager:ap-northeast-2:123456789012:secret:parking-guardian/grafana-xxxxxx" # data: secret_arns.grafana
