@@ -113,16 +113,28 @@ resource "aws_cloudwatch_log_group" "container_insights" {
 }
 
 resource "aws_eks_addon" "cloudwatch_observability" {
-  cluster_name                = aws_eks_cluster.this.name
-  addon_name                  = "amazon-cloudwatch-observability"
+  cluster_name = aws_eks_cluster.this.name
+  addon_name   = "amazon-cloudwatch-observability"
+
+  # 버전 고정 (설계 3.12, 검토 문서 aws-review.md). 기본 버전은 시간이 지나면 바뀌고(2026-10-30 기본은 v7.0.0), 재구축할 때마다
+  # 노드 요청 합이 달라지면 배치 계산(설계 3.7.1)이 틀어진다. v6.7.0 은 2026-10-27/28 에 실제로 돌며 요청 합(노드 2대 700m)을
+  # 잰 버전이다. 올릴 때는 이 줄과 아래 schema 확인(aws eks describe-addon-configuration)을 같이 한다.
+  addon_version               = "v6.7.0-eksbuild.1"
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "PRESERVE"
 
   # Application Signals(APM 추적) 는 쓰지 않는다. 기본값(enabled, autoMonitor.monitorAllServices = true)으로 두면 웹훅이 모든 Pod 에
   # 언어별 자동 계측 initContainer 4개(java, python, nodejs, dotnet)를 끼워 넣어 Pod 시작 시간 측정(2.1절)이 흐려지고 비용이 붙는다
   # (2026-10-27 backend Pod 가 Init:4/5 로 뜨는 것을 보고 확인). 둘 다 끈다. 지표(Container Insights)·로그(Fluent Bit)는 그대로.
+  #
+  # nodeExporter / kubeStateMetrics 도 끈다: monitoring 스택(kube-prometheus-stack)이 이미 node-exporter(노드마다)와 kube-state-metrics 를
+  # 돌리므로 중복이고, 켜지면 노드마다 256m(+ 클러스터에 256m)을 더 예약해 3노드 배치가 깨진다(설계 3.7.1). 두 키는 v6.7.0 과 v7.0.0 의
+  # 공개 스키마에 모두 있고 기본값이 true 로 적혀 있지만, 2026-10-27/28 의 v6.7.0 클러스터에서는 실제로 떠 있지 않았다.
+  # 기본값에 기대지 않고 명시적으로 꺼서 버전이 바뀌어도 결과가 같게 한다.
   configuration_values = jsonencode({
     applicationSignals = { enabled = false }
+    nodeExporter       = { enabled = false }
+    kubeStateMetrics   = { enabled = false }
     manager = {
       applicationSignals = {
         autoMonitor = { monitorAllServices = false }

@@ -46,3 +46,8 @@ output "backend_role_arn" {
   description = "backend Pod Identity 역할 ARN. 참고용(config 리포에는 넣지 않는다. 연결은 이름으로 된다)."
   value       = aws_iam_role.backend.arn
 }
+
+output "inference_role_arn" {
+  description = "inference Pod Identity 역할 ARN (모델 버킷 읽기만). 참고용(연결은 이름으로 된다)."
+  value       = aws_iam_role.inference.arn
+}

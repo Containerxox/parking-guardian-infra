@@ -1,14 +1,16 @@
 # ---------------------------------------------------------------------------
-# ECR 리포지토리 2개 (architecture.md 4.7): parking-guardian/backend, parking-guardian/frontend
+# ECR 리포지토리 3개 (architecture.md 4.7): parking-guardian/backend, parking-guardian/frontend, parking-guardian/inference
+#   inference 는 Phase 1 의 AI 추론 서비스 이미지(torch + YOLOv5, 설계 9.1). backend 리포지토리에는 API 이미지(`api` 타깃)가 올라간다.
 # 이미지는 PC 에서 빌드·푸시한다(Terraform 은 리포지토리만). 태그는 Git 짧은 해시.
 #
-# 비용: 저장 $0.10/GB·월. Backend 2.89 GB 이미지 10개면 압축 기준 약 10 GB → 월 $1 안팎.
+# 비용: 저장 $0.10/GB·월. Prototype backend 는 2.89 GB(압축 약 660 MB), Phase 1 의 api 는 압축 약 84 MB, inference 는 압축 약 625 MB
+# (2026-10-30 로컬 빌드 측정). 이미지 10개씩 유지하면 inference 약 6 GB → 월 $0.6 안팎이 더해진다 [추정].
 # 전송: 노드가 이미지를 받을 때 ECR API 는 NAT 를 거치지만, 레이어 본체는 S3 라 network 스택의 S3 Endpoint 로 빠진다.
 #
 # 리포지토리 이름의 "/" 는 네임스페이스처럼 보이게 하는 관례일 뿐 계층 구조는 아니다.
 # ---------------------------------------------------------------------------
 locals {
-  ecr_repositories = toset(["backend", "frontend"])
+  ecr_repositories = toset(["backend", "frontend", "inference"])
 }
 
 resource "aws_ecr_repository" "this" {

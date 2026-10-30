@@ -127,12 +127,12 @@ variable "log_retention_days" {
 #   terraform -chdir=../data output -raw models_bucket_arn
 # ---------------------------------------------------------------------------
 variable "photos_bucket_arn" {
-  description = "data 출력 photos_bucket_arn. backend 가 violations/* 에 사진을 Put/Get/Head."
+  description = "data 출력 photos_bucket_arn. backend(API)만 violations/* 에 사진을 Put/Get/Head. inference 에는 주지 않는다."
   type        = string
 }
 
 variable "models_bucket_arn" {
-  description = "data 출력 models_bucket_arn. initContainer 가 v*/ 의 모델을 List/Get."
+  description = "data 출력 models_bucket_arn. inference 의 initContainer 만 v*/ 의 모델을 List/Get. backend(API)에는 주지 않는다 (Phase 1)."
   type        = string
 }
 
@@ -149,4 +149,10 @@ variable "backend_service_account" {
   description = "backend Pod 의 ServiceAccount 이름. config 리포 serviceaccount-backend.yaml 과 같아야 한다."
   type        = string
   default     = "backend"
+}
+
+variable "inference_service_account" {
+  description = "inference Pod 의 ServiceAccount 이름. config 리포 serviceaccount-inference.yaml 과 같아야 한다. backend 와 다른 이름이라 권한이 섞이지 않는다."
+  type        = string
+  default     = "inference"
 }
