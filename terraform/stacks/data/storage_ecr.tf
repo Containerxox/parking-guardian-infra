@@ -1,16 +1,22 @@
 # ---------------------------------------------------------------------------
-# ECR 리포지토리 3개 (architecture.md 4.7): parking-guardian/backend, parking-guardian/frontend, parking-guardian/inference
+# ECR 리포지토리 4개 (architecture.md 4.7): parking-guardian/backend, frontend, inference, worker
 #   inference 는 Phase 1 의 AI 추론 서비스 이미지(torch + YOLOv5, 설계 9.1). backend 리포지토리에는 API 이미지(`api` 타깃)가 올라간다.
+#   worker 는 Phase 2 의 판별 Worker 이미지(2026-11-03, ADR 0019). Dockerfile 의 `prototype` 타깃(API 의존성 + torch + YOLOv5)으로 만든다.
+#   Worker 는 DB·S3·SQS 에 직접 접속하고 모델을 프로세스 안에서 돌려서 backend(api: torch 없음)나 inference(DB·S3 패키지 없음) 이미지로는 안 된다.
+#   Relay 는 backend 이미지를 쓰므로 리포지토리가 따로 없다.
+#   이 목록에 이름을 더하면 아래가 모두 자동으로 따라온다(같은 for_each): 리포지토리, Lifecycle 정책, 출력 ecr_repository_urls,
+#   GitHub Actions 역할의 push 권한(cicd.tf: resources = 모든 리포지토리 ARN). 노드 역할의 Pull 권한은 계정의 모든 리포지토리 대상이다.
 # 이미지는 PC 에서 빌드·푸시한다(Terraform 은 리포지토리만). 태그는 Git 짧은 해시.
 #
 # 비용: 저장 $0.10/GB·월. Prototype backend 는 2.89 GB(압축 약 660 MB), Phase 1 의 api 는 압축 약 84 MB, inference 는 압축 약 625 MB
 # (2026-10-30 로컬 빌드 측정). 이미지 10개씩 유지하면 inference 약 6 GB → 월 $0.6 안팎이 더해진다 [추정].
+# worker(prototype 타깃)는 압축 약 660 MB 로 같은 규모라 10개 유지 시 월 $0.7 안팎이 더해진다 [추정].
 # 전송: 노드가 이미지를 받을 때 ECR API 는 NAT 를 거치지만, 레이어 본체는 S3 라 network 스택의 S3 Endpoint 로 빠진다.
 #
 # 리포지토리 이름의 "/" 는 네임스페이스처럼 보이게 하는 관례일 뿐 계층 구조는 아니다.
 # ---------------------------------------------------------------------------
 locals {
-  ecr_repositories = toset(["backend", "frontend", "inference"])
+  ecr_repositories = toset(["backend", "frontend", "inference", "worker"])
 }
 
 resource "aws_ecr_repository" "this" {
