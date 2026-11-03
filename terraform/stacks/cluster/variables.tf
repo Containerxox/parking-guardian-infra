@@ -183,3 +183,19 @@ variable "relay_service_account" {
   type        = string
   default     = "relay"
 }
+
+# ---------------------------------------------------------------------------
+# KEDA operator Pod Identity (iam_keda.tf). config 리포 argocd/apps/keda.yaml 의 Namespace 와 platform/keda/values.yaml 의
+# serviceAccount.operator.name 과 같아야 한다.
+# ---------------------------------------------------------------------------
+variable "keda_namespace" {
+  description = "KEDA 가 설치되는 Namespace. config 리포 argocd/apps/keda.yaml 의 destination.namespace."
+  type        = string
+  default     = "keda"
+}
+
+variable "keda_service_account" {
+  description = "KEDA operator 의 ServiceAccount 이름. KEDA 차트 기본값이고 config 리포 platform/keda/values.yaml 이 명시한다."
+  type        = string
+  default     = "keda-operator"
+}
