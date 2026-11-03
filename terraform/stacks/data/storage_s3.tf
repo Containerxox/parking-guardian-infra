@@ -106,3 +106,51 @@ resource "aws_s3_bucket_policy" "this" {
   # 퍼블릭 차단이 먼저 적용된 뒤 정책을 붙인다.
   depends_on = [aws_s3_bucket_public_access_block.this]
 }
+
+# ---------------------------------------------------------------------------
+# Phase 2: 사진 버킷 inbox/ 수명 주기 (ADR 0019 결정 10)
+#   inbox/m-<장비>/<event_id> = 판별용 임시 사진. 확정 증거는 Worker/Relay 가 violations/ 로 복사해 두므로
+#   inbox 는 7일 뒤 지워도 된다. violations/ 에는 규칙을 걸지 않는다(90일 만료는 앱의 EXPIRED 처리와 함께 뒤에).
+#   만료된 inbox 사진을 가리키는 중복 요청은 앱이 비교 없이 200 으로 처리한다(ingest.py).
+#   주의: 앱의 S3_PREFIX 를 설정하면 실제 키가 바뀐다. 지금은 비워 둔다(config 리포 확인).
+#   버전 관리를 켜지 않은 버킷이라 만료 = 영구 삭제.
+# ---------------------------------------------------------------------------
+resource "aws_s3_bucket_lifecycle_configuration" "photos" {
+  bucket = aws_s3_bucket.this["photos"].id
+
+  # < 보존 기간 순서 검증 > 본 큐 보존 < inbox 보존. 반대로 되면 메시지가 사진보다 오래 살아서 Worker 가
+  #   rejected(missing_image) 를 만들고, Relay 의 멈춘 작업 복구(앱 RELAY_STALLED_AFTER_SECONDS, 기본 1일)가
+  #   복구하려는 사진도 이미 없다. 변수 validation 은 다른 변수를 참조하지 못하는 버전이 있어 여기서 plan 단계에 막는다.
+  #   (DLQ 는 이동 시점부터 보존 시계가 다시 시작되므로 접수 후 최대 약 2배까지 살 수 있다. 그 구간은
+  #   ADR 0019 "10단계 AWS 인프라 사전 검토"에 위험으로 기록돼 있고 이 검증이 막지는 않는다.)
+  lifecycle {
+    precondition {
+      condition     = var.inbox_retention_days > var.judgement_retention_days
+      error_message = "inbox_retention_days (${var.inbox_retention_days}) must be greater than judgement_retention_days (${var.judgement_retention_days}): a queue message must not outlive the inbox photo it points to."
+    }
+  }
+
+  rule {
+    id     = "expire-inbox"
+    status = "Enabled"
+
+    filter {
+      prefix = "inbox/"
+    }
+
+    expiration {
+      days = var.inbox_retention_days
+    }
+  }
+
+  rule {
+    id     = "abort-incomplete-multipart"
+    status = "Enabled"
+
+    filter {}
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 1
+    }
+  }
+}

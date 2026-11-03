@@ -161,3 +161,40 @@ variable "github_branches" {
   type        = list(string)
   default     = ["develop", "main"]
 }
+
+# ---------------------------------------------------------------------------
+# Phase 2 판별 큐 / inbox (ADR 0019)
+# ---------------------------------------------------------------------------
+variable "judgement_visibility_timeout_seconds" {
+  description = "본 큐 가시성 제한(초). Worker 리스(55초)보다 길어야 한다."
+  type        = number
+  default     = 60
+
+  validation {
+    condition     = var.judgement_visibility_timeout_seconds > 55
+    error_message = "가시성 제한은 Worker 리스 55초보다 길어야 한다."
+  }
+}
+
+variable "judgement_max_receive_count" {
+  description = "본 큐에서 이 횟수만큼 받고도 지우지 못하면 DLQ 로 이동."
+  type        = number
+  default     = 3
+}
+
+variable "judgement_retention_days" {
+  description = "본 큐와 DLQ 의 메시지 보존 기간(일). ADR 0019 결정: 4일. FIFO 최대 14일."
+  type        = number
+  default     = 4
+
+  validation {
+    condition     = var.judgement_retention_days >= 1 && var.judgement_retention_days <= 14
+    error_message = "SQS 보존 기간은 1~14일."
+  }
+}
+
+variable "inbox_retention_days" {
+  description = "사진 버킷 inbox/ (판별용 임시 사진) 만료 일수. ADR 0019 결정 10: 7일."
+  type        = number
+  default     = 7
+}
