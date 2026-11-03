@@ -167,7 +167,8 @@ terraform plan                                           # 완료 기준: "No ch
 |---|---|
 | `budget.tf` | Budgets 월 $100, 실제 누적 $50·$100 도달 시 이메일. 크레딧·환불 제외 집계. 자동 조치 없음 |
 | `storage_s3.tf` | S3 `parking-guardian-photos-<계정ID>`, `parking-guardian-models-<계정ID>`. 소유권 강제, 퍼블릭 차단, SSE-S3, HTTPS 전용. 버전 관리·Lifecycle 없음 |
-| `storage_ecr.tf` | ECR `parking-guardian/backend`, `parking-guardian/frontend`. 태그 불변, 푸시 시 스캔, untagged 1일·태그 최근 10개 유지 |
+| `storage_ecr.tf` | ECR `parking-guardian/backend`, `frontend`, `inference`, `worker`(Phase 2 판별 Worker, Dockerfile `prototype` 타깃). 태그 불변, 푸시 시 스캔, untagged 1일·태그 최근 10개 유지. 이름을 목록에 더하면 Lifecycle 정책·출력·CI 푸시 권한이 같이 생긴다 |
+| `storage_sqs.tf` | Phase 2 판별 큐 `parking-guardian-judgement.fifo` + DLQ(가시성 60초, 재수신 3회, 보존 4일, SSE-SQS, HTTPS 전용 정책). `storage_s3.tf` 의 사진 버킷 수명 주기: `inbox/` 7일(큐 보존보다 길어야 한다: plan 에서 검증) |
 | `secrets.tf` | Secrets Manager `parking-guardian/app`(SECRET_KEY, JWT_SECRET), `parking-guardian/seed`(SEED_ADMIN_PASSWORD, SEED_DEVICE_KEY_SECRET). 빈 컨테이너, 삭제 유예 7일 |
 | `rds.tf` | DB 서브넷 그룹(Private DB Subnet a·c), 파라미터 그룹 postgres16(`rds.force_ssl=1`), 인스턴스 `parking-guardian`: PostgreSQL 16, `db.t4g.micro`, Single-AZ, gp3 20 GB, 암호화, 공개 접근 없음, 관리형 마스터 비밀번호, 백업 1일, 삭제 보호, 최종 스냅샷 |
 | `dns.tf` | Route 53 Hosted Zone `<domain_name>`, ACM 인증서 `parking.<domain_name>`(DNS 검증, 서울 리전), 검증 CNAME, 검증 완료 대기 |
@@ -271,7 +272,9 @@ aws eks list-pod-identity-associations --cluster-name parking-guardian   # cloud
 | `eks.tf` | 클러스터 IAM 역할, EKS 1.35. 인증 모드 API(생성자 자동 admin), 엔드포인트 Private + Public(관리자 IP 제한), Service CIDR `172.20.0.0/16`, 표준 지원만, 컨트롤 플레인 로그 끔 |
 | `nodes.tf` | 노드 IAM 역할(WorkerNode, CNI, ECR PullOnly, SSM), Launch Template(gp3 50 GB 암호화, 클러스터 SG + network node SG, IMDSv2), 관리형 노드 그룹 `parking-guardian-main`(AL2023 x86_64, desired 2 / min 0 / max 3) |
 | `addons.tf` | 관리형 Add-on 6개(vpc-cni, kube-proxy, coredns, eks-pod-identity-agent, metrics-server, amazon-cloudwatch-observability), CloudWatch 에이전트 Pod Identity 역할, Container Insights 로그 그룹 4개(7일) |
-| `iam.tf` | backend Pod Identity 역할(사진 `violations/*` Put/Get, 모델 `v*/` List/Get) + 연결(`parking-guardian`/`backend`) |
+| `iam.tf` | backend Pod Identity 역할(사진 `violations/*` Put/Get, inbox, 큐 SendMessage) + 연결(`parking-guardian`/`backend`), inference 역할(모델 읽기) |
+| `iam_phase2.tf` | Phase 2 `worker`(큐 소비, inbox 읽기, 증거 쓰기, 모델 읽기), `relay`(큐 발행, DLQ, 증거) Pod Identity 역할 + 연결 |
+| `iam_keda.tf` | KEDA operator(`keda`/`keda-operator`)의 Pod Identity 역할: 본 큐 `sqs:GetQueueAttributes` 하나(ScaledObject 가 큐 길이를 읽는다) |
 
 **설계와 다른 점**: 노드는 설계 `m7i.large` 가 아니라 **`m7i-flex.large`**. AWS Free 플랜은 Free Tier 적격 인스턴스 타입만 띄울 수 있고(Auto Scaling 오류 "not eligible for Free Tier"), 서울 리전 적격 x86 타입 중 8 GiB 는 이것 하나다. flex 는 평균 사용률 40% 전제라 추론이 CPU 를 오래 채우면 `m7i.large` 보다 느릴 수 있다. 측정 기록에 적는다.
 
