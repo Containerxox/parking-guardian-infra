@@ -34,3 +34,5 @@ CLAUDE.md
 # Shared S3 backend settings (contains the account ID). Only the example is tracked.
 backend.hcl
 !backend.hcl.example
+
+*.log
