@@ -19,3 +19,7 @@ node_security_group_id = "sg-zzzzzzzzzzzzzzzzz"   # network: node_security_group
 # --- iam: data 스택 출력값 ---
 photos_bucket_arn = "arn:aws:s3:::parking-guardian-photos-123456789012"   # data: photos_bucket_arn
 models_bucket_arn = "arn:aws:s3:::parking-guardian-models-123456789012"   # data: models_bucket_arn
+
+# Phase 2 (data 스택 출력)
+judgement_queue_arn = "arn:aws:sqs:ap-northeast-2:123456789012:parking-guardian-judgement.fifo"       # data: judgement_queue_arn
+judgement_dlq_arn   = "arn:aws:sqs:ap-northeast-2:123456789012:parking-guardian-judgement-dlq.fifo"   # data: judgement_dlq_arn

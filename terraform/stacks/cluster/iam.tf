@@ -27,6 +27,28 @@ data "aws_iam_policy_document" "backend" {
     ]
     resources = ["${var.photos_bucket_arn}/violations/*"]
   }
+
+  # Phase 2 (iam_phase2.tf 머리말 참고): 접수가 inbox/ 에 생성 전용으로 쓰고, 중복 요청 때 다시 읽는다.
+  statement {
+    sid       = "InboxWriteRead"
+    effect    = "Allow"
+    actions   = ["s3:PutObject", "s3:GetObject"]
+    resources = ["${var.photos_bucket_arn}/inbox/*"]
+  }
+
+  statement {
+    sid       = "PhotosListForNotFound"
+    effect    = "Allow"
+    actions   = ["s3:ListBucket"]
+    resources = [var.photos_bucket_arn]
+  }
+
+  statement {
+    sid       = "JudgementQueueSend"
+    effect    = "Allow"
+    actions   = ["sqs:SendMessage"]
+    resources = [var.judgement_queue_arn]
+  }
 }
 
 resource "aws_iam_role" "backend" {

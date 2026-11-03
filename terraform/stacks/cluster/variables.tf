@@ -156,3 +156,30 @@ variable "inference_service_account" {
   type        = string
   default     = "inference"
 }
+
+# ---------------------------------------------------------------------------
+# Phase 2 (ADR 0019): data 스택의 큐 ARN 과 Worker/Relay ServiceAccount.
+#   terraform -chdir=../data output -raw judgement_queue_arn
+#   terraform -chdir=../data output -raw judgement_dlq_arn
+# ---------------------------------------------------------------------------
+variable "judgement_queue_arn" {
+  description = "data 출력 judgement_queue_arn. api 는 Send, Worker 는 Receive/Delete/ChangeVisibility, Relay 는 Send."
+  type        = string
+}
+
+variable "judgement_dlq_arn" {
+  description = "data 출력 judgement_dlq_arn. Relay 만 Receive/Delete/ChangeVisibility."
+  type        = string
+}
+
+variable "worker_service_account" {
+  description = "Worker Pod(flask judge-worker)의 ServiceAccount 이름. config 리포 매니페스트와 같아야 한다."
+  type        = string
+  default     = "worker"
+}
+
+variable "relay_service_account" {
+  description = "Relay Pod(flask outbox-relay)의 ServiceAccount 이름. config 리포 매니페스트와 같아야 한다."
+  type        = string
+  default     = "relay"
+}
