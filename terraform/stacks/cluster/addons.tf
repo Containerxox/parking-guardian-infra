@@ -131,10 +131,21 @@ resource "aws_eks_addon" "cloudwatch_observability" {
   # 돌리므로 중복이고, 켜지면 노드마다 256m(+ 클러스터에 256m)을 더 예약해 3노드 배치가 깨진다(설계 3.7.1). 두 키는 v6.7.0 과 v7.0.0 의
   # 공개 스키마에 모두 있고 기본값이 true 로 적혀 있지만, 2026-10-27/28 의 v6.7.0 클러스터에서는 실제로 떠 있지 않았다.
   # 기본값에 기대지 않고 명시적으로 꺼서 버전이 바뀌어도 결과가 같게 한다.
+  #
+  # agent.resources: CloudWatch Agent(노드마다 1개 DaemonSet)의 CPU 요청을 기본 250m 에서 100m 으로 낮춘다(2026-11-04).
+  # 실제 사용량은 노드당 3~10m 이라 250m 예약은 과하고, 3노드에서 노드당 150m 이 비어야 Worker(1000m)가 들어갈 자리가 생긴다
+  # (공존 구성 실측: 남는 CPU 40m / 125m / 940m). 이 키는 객체 통째로 바뀌므로(스키마 v6.7.0 definitions.agent.resources),
+  # 메모리 요청(128Mi)과 CPU·메모리 상한(500m / 512Mi)은 기본값 그대로 같이 적는다. CPU 상한은 그대로라 순간 부하는 처리된다.
   configuration_values = jsonencode({
     applicationSignals = { enabled = false }
     nodeExporter       = { enabled = false }
     kubeStateMetrics   = { enabled = false }
+    agent = {
+      resources = {
+        requests = { cpu = "100m", memory = "128Mi" }
+        limits   = { cpu = "500m", memory = "512Mi" }
+      }
+    }
     manager = {
       applicationSignals = {
         autoMonitor = { monitorAllServices = false }
