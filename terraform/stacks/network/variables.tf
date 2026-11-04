@@ -65,6 +65,33 @@ variable "private_db_subnet_cidrs" {
 # ---------------------------------------------------------------------------
 # Security Group (architecture.md 4.2 "SG 사슬")
 # ---------------------------------------------------------------------------
+variable "alb_ingress_cidrs" {
+  description = <<-EOT
+    ALB 의 80·443 을 열어 주는 IPv4 CIDR 목록. **기본값이 없다 — 반드시 직접 지정해야 한다.**
+    (이전에는 기본값이 ["0.0.0.0/0"](인터넷 전체)였다. terraform.tfvars 를 빠뜨린 PC 에서 apply 하면 ALB 가 전체 공개되는 사고를 막으려고 기본값을 없앴다.)
+    평소: 허용할 공인 IP 의 /32 를 terraform.tfvars(gitignore)에 적는다.  alb_ingress_cidrs = ["203.0.113.7/32"]
+    전체 공개가 정말 필요하면 ["0.0.0.0/0"] 를 명시해서 적는다(운영 공개 시점의 의도된 선택이어야 한다).
+    주의: 제한하면 현장 장비(Raspberry Pi)도 그 IP 가 아니면 접속하지 못한다. 공인 IP 가 바뀌면 이 값을 고쳐 다시 apply 한다(README 의 복구 절차).
+    규칙을 먼저 만들고(create_before_destroy) 옛 규칙을 지우므로 값을 바꿔도 접속이 끊기는 틈이 없다.
+  EOT
+  type        = list(string)
+
+  validation {
+    condition     = length(var.alb_ingress_cidrs) > 0
+    error_message = "alb_ingress_cidrs 는 비어 있으면 안 된다. 허용할 IPv4 CIDR 을 하나 이상 적는다(예: [\"203.0.113.7/32\"])."
+  }
+
+  validation {
+    condition     = alltrue([for c in var.alb_ingress_cidrs : can(cidrhost(c, 0)) && !strcontains(c, ":")])
+    error_message = "alb_ingress_cidrs 의 모든 값은 IPv4 CIDR(주소/접두어) 이어야 한다. 예: 203.0.113.7/32. IPv6·접두어 없는 주소는 안 된다."
+  }
+
+  validation {
+    condition     = alltrue([for c in var.alb_ingress_cidrs : !can(cidrhost(c, 0)) || cidrhost(c, 0) == split("/", c)[0]])
+    error_message = "alb_ingress_cidrs 의 CIDR 은 네트워크 주소여야 한다(호스트 비트가 0). 예: 203.0.113.0/24 는 되고 203.0.113.7/24 는 안 된다. 단일 IP 는 /32 로 적는다."
+  }
+}
+
 variable "app_ports" {
   description = "ALB 가 Pod 로 보내는 컨테이너 포트. 키는 규칙 이름, 값은 포트. Backend Flask 5000, Frontend nginx(비특권 이미지) 8080."
   type        = map(number)

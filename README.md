@@ -95,12 +95,13 @@ terraform init -backend-config=..\..\backend.hcl
 
 ## 2. network
 
-VPC 와 그 안의 네트워크 골격. 수명이 길고 **비용 0** 인 것만 둔다. 비용이 드는 NAT Gateway 는 매일 지우는 `cluster` 스택 소속이다. 앞 스택에서 받는 값은 없고 변수 파일도 필요 없다(기본값이 설계값).
+VPC 와 그 안의 네트워크 골격. 수명이 길고 **비용 0** 인 것만 둔다. 비용이 드는 NAT Gateway 는 매일 지우는 `cluster` 스택 소속이다. 앞 스택에서 받는 값은 없다. 다만 **`alb_ingress_cidrs`(ALB 접속 허용 IP)는 기본값이 없어 `terraform.tfvars` 로 직접 지정해야 한다**(아래 "ALB 접근 제한"). 나머지 변수는 기본값이 설계값이다.
 
 ```powershell
 $env:AWS_PROFILE = "parking-guardian"
 aws sts get-caller-identity          # 계정·사용자 확인
 cd terraform\stacks\network
+copy terraform.tfvars.example terraform.tfvars   # 처음 한 번. 열어서 alb_ingress_cidrs 를 내 공인 IP/32 로 고친다
 terraform init -backend-config=..\..\backend.hcl
 terraform plan
 terraform apply
@@ -115,11 +116,26 @@ terraform plan                       # 완료 기준: "No changes."
 | `subnets.tf` | Subnet 6개. Public `/24` ×2(`kubernetes.io/role/elb=1`), Private App `/20` ×2(`kubernetes.io/role/internal-elb=1`), Private DB `/24` ×2. AZ `a`, `c` |
 | `routes.tf` | Internet Gateway 1개, 라우트 테이블 3개(public: `0.0.0.0/0 → IGW`, private-app·private-db: local 만), Subnet 연결 6개 |
 | `endpoints.tf` | S3 Gateway Endpoint. Private App 라우트 테이블에만 연결 |
-| `security_groups.tf` | SG 3개와 규칙 8개. `alb`(0.0.0.0/0 → 443, 80) → `node`(5000, 8080) → `rds`(5432). node 아웃바운드 전체 허용, rds 아웃바운드 없음 |
+| `security_groups.tf` | SG 3개와 규칙 8개. `alb`(`alb_ingress_cidrs` → 443, 80 — 기본값 없음) → `node`(5000, 8080) → `rds`(5432). node 아웃바운드 전체 허용, rds 아웃바운드 없음 |
 
 CIDR 배치: Private App `10.0.0.0/20`(a), `10.0.16.0/20`(c). Public `10.0.32.0/24`, `10.0.33.0/24`. Private DB `10.0.40.0/24`, `10.0.41.0/24`. `10.0.48.0` 이후는 비워 둔다.
 
 라우트와 SG 규칙은 inline 블록이 아니라 별도 리소스(`aws_route`, `aws_vpc_security_group_*_rule`)로 쓴다. `cluster` 스택이 Private App 라우트 테이블에 넣는 NAT 경로와 AWS Load Balancer Controller 가 런타임에 추가하는 SG 규칙을 이 스택의 `plan` 이 지우지 않게 하기 위해서다.
+
+### ALB 접근 제한 (`alb_ingress_cidrs`)
+
+ALB 보안 그룹의 80·443 인바운드는 `alb_ingress_cidrs` 목록의 IPv4 CIDR 에만 열린다. **기본값이 없다.** 예전 기본값 `0.0.0.0/0`(인터넷 전체)은 `terraform.tfvars` 를 빠뜨린 PC 에서 apply 하면 ALB 가 전체 공개되는 사고로 이어질 수 있어 없앴다. 값이 없으면 Terraform 이 값을 묻고(비대화형이면 `No value for required variable` 오류), 빈 목록·IPv6·접두어 없는 주소·호스트 비트가 있는 값(`203.0.113.7/24`)은 plan 단계에서 거부한다.
+
+**다른 PC 에서 처음 실행할 때**
+
+1. `terraform.tfvars` 는 gitignore 라 저장소에 없다. 예시를 복사한다: `copy terraform.tfvars.example terraform.tfvars` (Git Bash: `cp`).
+2. 내 현재 공인 IP 를 확인한다: `curl https://checkip.amazonaws.com`
+3. `terraform.tfvars` 의 `alb_ingress_cidrs` 를 `["<내 IP>/32"]` 로 고친다. 여러 곳에서 접속하면 목록에 더한다.
+4. `terraform init -backend-config=..\..\backend.hcl` → `terraform plan`. **먼저 plan 으로 ALB 규칙이 의도한 CIDR 로 나오는지 보고, 예상과 다르면 apply 하지 않는다.** 이미 apply 된 환경이라면 기존 값과 같을 때 `No changes.` 가 나와야 한다. 다른 값이면 규칙 교체(2 add / 2 destroy)가 나온다.
+
+**공인 IP 가 바뀌었을 때(접속이 막힘)**: `terraform.tfvars` 의 값을 새 `/32` 로 고치고 plan 에서 ALB 규칙 2 add / 2 destroy 만 나오는지 확인한 뒤 apply 한다. 새 규칙을 먼저 만들고 옛 규칙을 지워 끊김이 없다. Terraform 은 AWS API 로 동작하므로 ALB 가 막혀 있어도 적용할 수 있다. 클러스터 스택의 `eks_public_access_cidrs`(kubectl 접근)도 같은 IP 면 따로 고친다. 비상으로 `aws ec2 authorize-security-group-ingress` 로 임시 허용했다면 Terraform 이 모르는 규칙이라 다음 plan 에서 지워진다.
+
+**전체 공개가 필요할 때**(운영 공개): `alb_ingress_cidrs = ["0.0.0.0/0"]` 를 **명시**해서 plan → apply. 현장 장비가 쓰는 공인 IP 가 고정이 아니면 이 선택이 필요할 수 있으므로 공개 전에 장비 접속 방식을 먼저 정한다.
 
 ### 출력값과 다음 스택
 
