@@ -6,7 +6,7 @@
 #   api     (기존 backend)  SQS SendMessage(본 큐) / S3 inbox/* Put·Get / violations/* Put·Get / 버킷 ListBucket
 #   worker                  SQS Receive·Delete·ChangeVisibility(본 큐) / S3 inbox/* Get, violations/* Put·Get
 #                           + 모델 버킷 v*/ List·Get (Worker 가 YOLO 를 직접 돌리므로 inference 와 같은 읽기 권한)
-#   relay                   SQS SendMessage(본 큐), Receive·Delete·ChangeVisibility(DLQ)
+#   relay                   SQS SendMessage(본 큐), Receive·Delete·ChangeVisibility(DLQ), GetQueueAttributes(본 큐·DLQ, 관측성)
 #                           + S3 inbox/* Get, violations/* Put·Get (끊긴 부수 효과 = 증거 사진 복사를 마무리한다)
 #
 # s3:ListBucket 을 주는 이유: S3 는 호출자에게 ListBucket 이 없으면 "없는 객체"를 404(NoSuchKey)가 아니라 403(AccessDenied)으로 답한다.
@@ -125,6 +125,15 @@ data "aws_iam_policy_document" "relay" {
       "sqs:ChangeMessageVisibility",
     ]
     resources = [var.judgement_dlq_arn]
+  }
+
+  # 관측성 2단계 (2026-11-06): Relay 가 15초마다 두 큐의 대략적인 메시지 수(대기·처리 중·지연)를 읽어 Prometheus 지표로 낸다. 읽기 전용 속성 조회 1개, 본 큐와 DLQ 만.
+  # 이 권한이 없으면 큐 깊이 지표가 나오지 않고(0 이 아니라 "없음") 알림 PGPipelineMetricsMissing 이 울린다. 판정·발행 동작에는 영향이 없다.
+  statement {
+    sid       = "QueueDepthRead"
+    effect    = "Allow"
+    actions   = ["sqs:GetQueueAttributes"]
+    resources = [var.judgement_queue_arn, var.judgement_dlq_arn]
   }
 
   statement {

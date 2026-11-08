@@ -3,6 +3,7 @@
 #   parking-guardian/app   SECRET_KEY, JWT_SECRET             (Flask 세션·JWT 서명)
 #   parking-guardian/seed  SEED_ADMIN_PASSWORD, SEED_DEVICE_KEY_SECRET (데모 관리자 비밀번호, 장비 키 유도 비밀)
 #   parking-guardian/grafana  admin-user, admin-password  (Grafana 관리자. ESO 가 monitoring/grafana-admin Secret 으로 만든다)
+#   parking-guardian/slack    url  (Slack Incoming Webhook URL. ESO 가 monitoring/slack-webhook Secret 으로 만든다. 2026-11-06 관측성 1단계. 값은 사용자가 터미널에서 직접 넣는다)
 #
 # 원칙: 비밀 "값" 은 Terraform 코드·State·Git 어디에도 없다. 여기서는 이름(컨테이너)만 만든다.
 #   값은 apply 뒤 CLI 로 1회 넣는다(README): aws secretsmanager put-secret-value --secret-id ... --secret-string file://...
@@ -12,7 +13,7 @@
 # 소비자: External Secrets Operator(platform 스택의 Pod Identity 역할이 이 비밀들의 ARN 에 Get/Describe)가
 #   읽어서 Kubernetes Secret backend-secrets 를 만든다. 매니페스트(config 리포)에는 비밀 "이름" 과 키 이름만 적힌다.
 #
-# 비용: 비밀 1개당 월 $0.40 + API 1만 건당 $0.05. 3개면 월 $1.20. (Free Tier 는 첫 30일만 무료)
+# 비용: 비밀 1개당 월 $0.40 + API 1만 건당 $0.05. 4개면 월 $1.60. (Free Tier 는 첫 30일만 무료)
 # ---------------------------------------------------------------------------
 locals {
   secrets = {
@@ -26,6 +27,10 @@ locals {
     # 키 이름은 Grafana 차트의 admin.existingSecret 이 기대하는 admin-user / admin-password.
     grafana = {
       description = "Grafana admin login. JSON keys: admin-user, admin-password. Values injected by CLI, not Terraform."
+    }
+    # Alertmanager 의 Slack Incoming Webhook URL. JSON 키는 url 하나. URL 은 Terraform 코드·State·Git 어디에도 없고 put-secret-value 로 직접 넣는다.
+    slack = {
+      description = "Slack incoming webhook for Alertmanager. JSON keys: url. Value injected by CLI, not Terraform."
     }
   }
 }

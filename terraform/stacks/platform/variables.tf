@@ -66,6 +66,11 @@ variable "grafana_secret_arn" {
   type        = string
 }
 
+variable "slack_secret_arn" {
+  description = "data 출력 secret_arns.slack (parking-guardian/slack: url). ESO 가 monitoring/slack-webhook 으로 만든다. Alertmanager 가 파일로 마운트해 Slack 으로 알림을 보낸다."
+  type        = string
+}
+
 # ---------------------------------------------------------------------------
 # External Secrets Operator (architecture.md 4.8)
 # ---------------------------------------------------------------------------
