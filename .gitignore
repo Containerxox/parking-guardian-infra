@@ -36,3 +36,24 @@ backend.hcl
 !backend.hcl.example
 
 *.log
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary and backup files
+*.tmp
+*.bak
+*.bak-*
+
+# Terraform plan output and lock info (saved plans are already covered by *.tfplan)
+*.plan
+tfplan
+.terraform.tfstate.lock.info
